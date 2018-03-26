@@ -1,13 +1,10 @@
-import { Output, Input, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { SearchResultService } from '../searchResult.service';
 import { FormControl } from '@angular/forms';
-import { EventEmitter } from 'selenium-webdriver';
-import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
-import { forEach } from '@angular/router/src/utils/collection';
 import { Result } from '../result';
-
-
+import { filter, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-search',
@@ -15,39 +12,34 @@ import { Result } from '../result';
   styleUrls: ['./search.component.css']
 })
 export class SearchComponent implements OnInit {
-  searchRequest = [];
-  searchNumbers = [];
-  public searchList = [];
+  private searchRequest: any[];
   private inputControl: any;
-  public location=[];
-  constructor(private searchResultService: SearchResultService) { }
-  private setValue() {
-    this.searchResultService.myValue = this.inputControl.value;
-  }
-  private setSearchList(){
-  this.searchResultService.searchList=this.searchList;
+  private searchTitle:string="Recent searches:";
+
+  constructor(private searchResultService: SearchResultService, private router: Router) {
   }
   ngOnInit() {
     this.inputControl = new FormControl();
+    this.searchRequest = this.searchResultService.listings;
   }
   go() {
-    this.setValue();
-    this.searchRequest.push(this.inputControl.value);
     this.searchResultService.getNumRes(this.inputControl.value)
-      .subscribe((data) => { 
-        this.searchNumbers.push(data)
-        console.log( this.searchNumbers);
+    .pipe(
+      map(item => item.slice(-5)),
+      filter(item => item.length <= 5)
+    )  
+    .subscribe((data) => {
+        this.searchRequest = data;
+        localStorage.setItem('request', JSON.stringify(this.searchRequest));
       });
-      this.searchResultService.getLocation(this.inputControl.value)
-      .subscribe((data) => {
-        this.location.push(data);
-        console.log(this.location);
-      });
-      this.searchResultService.getInfo(this.inputControl.value)
-      .subscribe((data) => {
-        this.searchList.push(data);
-        this.setSearchList();
-        console.log(this.searchResultService.searchList);
-      });
+      this.searchTitle="Please select a location below:";
+  }
+  private currentPlace(item) {
+    this.searchResultService.location = item.location;
+    this.searchResultService.currentList = item.result;
+    this.router.navigate(['/result']);
+  }
+  private faves() {
+    this.router.navigate(['/faves']);
   }
 }

@@ -3,5 +3,6 @@ export class Result {
     price: number;
     title: string;
     price_currency: string;
-    total_results:number;
+    summary:string;
+    bedroom_number:number;
 }

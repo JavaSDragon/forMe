@@ -1,8 +1,7 @@
-import { Input, EventEmitter, Component, OnInit, Output } from '@angular/core';
-import { Result } from '../result';
+import { Component, OnInit } from '@angular/core';
 import { SearchResultService } from '../searchResult.service';
-import { SearchComponent } from '../search/search.component';
-
+import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -11,18 +10,27 @@ import { SearchComponent } from '../search/search.component';
   styleUrls: ['./search-result.component.css']
 })
 export class SearchResultComponent implements OnInit {
- searchList = [];
-  constructor(private searchResultService: SearchResultService) { }
-  private setSearchList(){
-    this.searchList=this.searchResultService.searchList;
-    }
+  private searchList = [];
+  private getLocation: string;
+  private page: number;
+  constructor(private searchResultService: SearchResultService, private location: Location, private router: Router) { }
   ngOnInit() {
-    this.setSearchList();
-    console.log(this.searchList)
-    // this.searchResultService.getInfo()
-    //   .subscribe((data) => {
-    //     this.searchList = data;
-    //     console.log(this.searchList);
-    //   });
+    this.searchList = this.searchResultService.currentList;
+    console.log(this.searchList);
+    this.page = 5;
+  }
+  private back() {
+    this.router.navigate(['/search']);
+  }
+  private detail(item) {
+    this.searchResultService.detail = item;
+    this.router.navigate(['/detail']);
+  }
+  private onScroll() {
+    this.searchResultService.getPage(this.page)
+      .subscribe((data) => {
+        this.searchList = [...this.searchList, ...data];
+      });
+      this.page += 1;
   }
 }
